@@ -4,6 +4,7 @@ import cors from "cors"
 import { message } from "./controllers/someStuff";
 import { connectDB } from "./config/db";
 import userRouter from "./routes/userRouter";
+import cookieParser from 'cookie-parser';
 dotenv.config({
   path: process.env.NODE_ENVIORMENT === "production" ?  ".env":".env.test"
 });
@@ -13,6 +14,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 app.use(cors());
+app.use(cookieParser());
 connectDB();
 
 // Routes

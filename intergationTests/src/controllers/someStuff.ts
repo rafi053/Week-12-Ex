@@ -1,13 +1,23 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
+
+import jwt from 'jsonwebtoken';
 import User, { IUser } from "../models/userModel";
+import dotenv from "dotenv";
+dotenv.config({
+  path: process.env.NODE_ENVIORMENT === "production" ?  ".env":".env.test"
+});
+const JWT_SECRET:string = process.env.JWT_SECRET as string;
+
 interface DTO {
   message: string;
   data?: any;
   success: boolean;
 }
 export const message = async (req: Request, res: Response): Promise<void> => {
-  res.status(200).json({ message: "Hello, world" });
+ 
+  const {_id} = (req as any).user;
+  res.status(200).json({ message: "Hello, world . id = " + _id });
 };
 export const register = async (req: Request, res: Response): Promise<void> => {
   const { email, password, name } = req.body;
@@ -54,12 +64,14 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         res.status(404).json({ message: "User not found", success: false });
         return;
       }
+      const token = jwt.sign({  _id:user._id }, JWT_SECRET, { expiresIn: '1h' });
+      res.cookie('token', token, { httpOnly: true ,  maxAge: 3600000 } );
   
       const isPasswordValid = await bcrypt.compare(password, user.password);
   
       if (isPasswordValid) {
         const response: DTO = {
-          data: { _id: user._id, name: user.name },
+          data: { _id: user._id, name: user.name, token: token },
           message: `Welcome ${user.name}`,
           success: true,
         };
